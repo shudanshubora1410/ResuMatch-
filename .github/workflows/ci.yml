@@ -1,0 +1,85 @@
+name: CI
+
+# Why the Docker build is part of CI: Docker is not installed on the development PC, so the
+# pipeline is the first place the Dockerfile is really exercised - better than discovering a
+# broken image during a Render deploy.
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test (Java 17 + MySQL 8)
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: resumatch_test
+          MYSQL_USER: resumatch_test
+          MYSQL_PASSWORD: test-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Build, run unit tests and generate the coverage report
+        working-directory: backend
+        env:
+          TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/resumatch_test?useSSL=false&allowPublicKeyRetrieval=true
+          TEST_DB_USER: resumatch_test
+          TEST_DB_PASSWORD: test-password
+        run: mvn -B --no-transfer-progress verify
+
+      - name: Upload the test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: warn
+
+      - name: Upload the coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco/
+          if-no-files-found: warn
+
+  docker-image:
+    name: Build the Docker image
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Build the production image
+        run: docker build --tag resumatch:ci .
+
+      - name: Show the image size
+        run: docker image ls resumatch:ci

@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.resumatch</groupId>
+  <artifactId>resumatch</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>war</packaging>
+
+  <name>ResuMatch</name>
+  <description>Explainable resume screening and recruitment platform</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- We target Java 17 language level even though the build JDK may be 21. -->
+    <maven.compiler.release>17</maven.compiler.release>
+
+    <!-- Dependency versions are pinned on purpose: reproducible builds, no surprise upgrades. -->
+    <servlet.api.version>6.0.0</servlet.api.version>
+    <gson.version>2.13.2</gson.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <logback.version>1.5.38</logback.version>
+    <hikari.version>6.3.3</hikari.version>
+    <mysql.connector.version>9.4.0</mysql.connector.version>
+    <flyway.version>13.12.0</flyway.version>
+    <angus.mail.version>2.0.5</angus.mail.version>
+    <junit.version>5.14.4</junit.version>
+    <mockito.version>5.24.0</mockito.version>
+    <jacoco.version>0.8.16</jacoco.version>
+    <!-- Empty by default; the jdk21 profile fills it in (the flag does not exist on JDK 17). -->
+    <mockito.argline></mockito.argline>
+
+    <!-- Plugin versions -->
+    <compiler.plugin.version>3.14.1</compiler.plugin.version>
+    <war.plugin.version>3.5.1</war.plugin.version>
+    <surefire.plugin.version>3.5.6</surefire.plugin.version>
+    <resources.plugin.version>3.3.1</resources.plugin.version>
+    <jacoco.plugin.version>${jacoco.version}</jacoco.plugin.version>
+  </properties>
+
+  <dependencies>
+    <!-- Servlet 6.0 API: provided by Tomcat 10.1 / Tomcat 11 at runtime, never packaged in the WAR. -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>${servlet.api.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- JSON -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${gson.version}</version>
+    </dependency>
+
+    <!-- Logging: SLF4J API in code, Logback as the implementation -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+    </dependency>
+
+    <!-- Connection pool -->
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+      <version>${hikari.version}</version>
+    </dependency>
+
+    <!-- JDBC driver (plain JDBC, no ORM) -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>${mysql.connector.version}</version>
+    </dependency>
+
+    <!-- Schema migrations, run from a ServletContextListener at startup -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+      <version>${flyway.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
+      <version>${flyway.version}</version>
+    </dependency>
+
+    <!-- Jakarta Mail (SMTP implementation) -->
+    <dependency>
+      <groupId>org.eclipse.angus</groupId>
+      <artifactId>angus-mail</artifactId>
+      <version>${angus.mail.version}</version>
+    </dependency>
+
+    <!-- Tests -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <!-- Deploying as ROOT.war keeps URLs tidy on Tomcat and on Render. -->
+    <finalName>resumatch</finalName>
+
+    <resources>
+      <!-- Filtering lets app.properties carry the Maven version, so /health can report it. -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>app.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>app.properties</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${compiler.plugin.version}</version>
+        <configuration>
+          <release>17</release>
+          <parameters>true</parameters>
+          <compilerArgs>
+            <arg>-Xlint:all,-processing</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>${war.plugin.version}</version>
+        <configuration>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
+          <warSourceDirectory>src/main/webapp</warSourceDirectory>
+          <webResources>
+            <!-- The frontend folder is the single source of truth for UI files:
+                 Vercel serves it directly, and the WAR gets a copy so Tomcat alone is self-contained. -->
+            <resource>
+              <directory>${project.basedir}/../frontend</directory>
+              <targetPath>/</targetPath>
+              <filtering>false</filtering>
+            </resource>
+          </webResources>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.plugin.version}</version>
+        <configuration>
+          <argLine>@{argLine} ${mockito.argline} -Dfile.encoding=UTF-8</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>${resources.plugin.version}</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- Mockito's inline mock maker self-attaches its agent. On JDK 21+ that needs an explicit
+         opt-in flag; JDK 17 (used by CI and Docker) does not know the option at all. -->
+    <profile>
+      <id>jdk21</id>
+      <activation>
+        <jdk>[21,)</jdk>
+      </activation>
+      <properties>
+        <mockito.argline>-XX:+EnableDynamicAgentLoading</mockito.argline>
+      </properties>
+    </profile>
+  </profiles>
+</project>

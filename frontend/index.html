@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResuMatch - know exactly why your resume matches a job</title>
+  <meta name="description" content="ResuMatch is an explainable resume screening platform: deterministic match scores you can inspect, and AI that only explains, never decides.">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script type="module" src="assets/js/pages/home.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- The header and footer are injected by assets/js/layout.js so they live in exactly one file. -->
+  <header id="site-header" class="site-header"></header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow">Explainable resume screening</p>
+          <h1>Know exactly <em>why</em> your resume matches a job.</h1>
+          <p class="lede">
+            Every score comes from rule-based Java you can read and audit - skills, experience,
+            education, projects, certifications and formatting. AI explains and suggests; it never
+            decides your score.
+          </p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="#status">Check the API status</a>
+            <a class="btn btn--ghost" href="#how">See how scoring works</a>
+          </div>
+          <ul class="chips" aria-label="Key properties">
+            <li class="chip">Deterministic scores</li>
+            <li class="chip">Full breakdown</li>
+            <li class="chip">AI explains, never decides</li>
+          </ul>
+        </div>
+
+        <aside class="card status-card" id="status" aria-labelledby="status-heading">
+          <div class="status-card__head">
+            <h2 id="status-heading">Live API status</h2>
+            <button class="btn btn--small btn--ghost" type="button" id="status-refresh">Check again</button>
+          </div>
+          <p class="status-card__hint">
+            This page calls <code>GET /api/v1/health</code> on the Java backend. On the free hosting
+            tier the first request can take up to a minute because the server is waking up.
+          </p>
+          <div id="status-output" class="status-output" role="status" aria-live="polite">
+            <p class="status-loading">Checking the backend…</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="how">
+      <div class="container">
+        <h2 class="section__title">How the score is built</h2>
+        <p class="section__lede">
+          Six categories, each scored 0-100 by confidence-weighted keyword matching, then combined
+          with per-job weights. Same resume and same job always give the same number.
+        </p>
+        <ol class="steps">
+          <li class="step">
+            <span class="step__number">1</span>
+            <h3>Extract and normalise</h3>
+            <p>PDF or DOCX text is cleaned and split into Summary, Skills, Experience, Education,
+              Projects, Certifications and Other.</p>
+          </li>
+          <li class="step">
+            <span class="step__number">2</span>
+            <h3>Match skills with confidence</h3>
+            <p>A skill found in the Skills section counts more than one mentioned in passing.
+              Synonyms such as "JS" and "JavaScript" resolve to one dictionary entry.</p>
+          </li>
+          <li class="step">
+            <span class="step__number">3</span>
+            <h3>Score six categories</h3>
+            <p>Skills, experience, education, projects, certifications and formatting each get a
+              transparent 0-100 score with the matched and missing items listed.</p>
+          </li>
+          <li class="step">
+            <span class="step__number">4</span>
+            <h3>Explain and improve</h3>
+            <p>The breakdown lists plain-English reasons and what-if simulations show the projected
+              score before you change anything.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section section--muted" id="features">
+      <div class="container">
+        <h2 class="section__title">Built for both sides of the hiring table</h2>
+        <div class="grid grid--3">
+          <article class="card feature">
+            <h3>Candidates</h3>
+            <p>See your match score with a full breakdown, simulate "what if I add Docker", track
+              applications and get a useful email at every stage - including a rejection that tells
+              you what to learn next.</p>
+          </article>
+          <article class="card feature">
+            <h3>Recruiters</h3>
+            <p>Post jobs with MUST_HAVE, IMPORTANT and NICE_TO_HAVE skills, see applicants ranked
+              with reasons, compare them side by side and move them through a pipeline.</p>
+          </article>
+          <article class="card feature">
+            <h3>Admins</h3>
+            <p>Manage the skill dictionary and synonyms, review reported jobs, approve AI-suggested
+              skill matches and watch platform analytics and audit logs.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="now">
+      <div class="container">
+        <div class="card callout">
+          <p class="eyebrow">Phase 0 of 16</p>
+          <h2>What is already running</h2>
+          <p>
+            This is the foundation release: the Maven WAR builds and starts on Tomcat, the database
+            connection pool and Flyway migrations run at startup, and this page talks to a real,
+            health-checked API. Accounts and the resume pipeline arrive in the next phases.
+          </p>
+          <ul class="checklist">
+            <li>Java 17 / Servlet 6.0 WAR, runs on Tomcat 10.1 and Tomcat 11</li>
+            <li>HikariCP pool + Flyway migrations with retry/backoff</li>
+            <li>One JSON success and error envelope, central error handler</li>
+            <li>File storage and mail sender behind interfaces (disk + SMTP today)</li>
+            <li>Docker, Render blueprint, Vercel rewrites and a CI pipeline</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

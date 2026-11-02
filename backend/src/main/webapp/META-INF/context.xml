@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Tomcat per-application configuration (packaged inside the WAR, so it also applies on Render).
+
+  RemoteIpValve: Render terminates TLS and forwards X-Forwarded-Proto / X-Forwarded-For.
+  Without this valve request.isSecure() would be false in production and Secure cookies would
+  never be sent. internalProxies=".*" trusts any upstream proxy; the trade-off is that a client
+  could spoof the scheme header, which can only make its own request look HTTPS - acceptable for
+  a single-proxy deployment, and it is the standard setting for PaaS hosting.
+
+  CookieProcessor sameSiteCookies="lax": the browser talks only to Vercel, which rewrites /api/*
+  to Render, so our cookies stay first-party and Lax works - while still blocking cross-site POSTs.
+-->
+<Context>
+  <Valve className="org.apache.catalina.valves.RemoteIpValve"
+         remoteIpHeader="X-Forwarded-For"
+         protocolHeader="X-Forwarded-Proto"
+         protocolHeaderHttpsValue="https"
+         internalProxies=".*"/>
+
+  <CookieProcessor className="org.apache.tomcat.util.http.Rfc6265CookieProcessor"
+                   sameSiteCookies="lax"/>
+</Context>

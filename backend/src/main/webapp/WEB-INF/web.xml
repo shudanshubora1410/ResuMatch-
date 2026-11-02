@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Everything the container needs to wire the application lives here, on purpose:
+  filter order in a Servlet WAR is only guaranteed by the order of the filter-mapping elements
+  below, so keeping the wiring in one file makes the order obvious instead of annotation-luck.
+-->
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+  <display-name>ResuMatch</display-name>
+
+  <!-- Creates the connection pool, runs Flyway and publishes AppServices into the ServletContext. -->
+  <listener>
+    <listener-class>com.resumatch.common.startup.AppContextListener</listener-class>
+  </listener>
+
+  <!-- Outermost: turns every error into the standard JSON envelope. -->
+  <filter>
+    <filter-name>errorHandlingFilter</filter-name>
+    <filter-class>com.resumatch.common.web.ErrorHandlingFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>errorHandlingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>securityHeadersFilter</filter-name>
+    <filter-class>com.resumatch.common.web.SecurityHeadersFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>securityHeadersFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Phase 0 API: health only. Feature servlets are added in later phases. -->
+  <servlet>
+    <servlet-name>healthServlet</servlet-name>
+    <servlet-class>com.resumatch.common.web.HealthServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>healthServlet</servlet-name>
+    <url-pattern>/api/v1/health</url-pattern>
+  </servlet-mapping>
+
+  <!-- Container error pages. sendError() bypasses filters, so this is the supported hook that
+       turns an unmapped /api/... URL into the standard JSON error envelope. -->
+  <servlet>
+    <servlet-name>errorPageServlet</servlet-name>
+    <servlet-class>com.resumatch.common.web.ErrorPageServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>errorPageServlet</servlet-name>
+    <url-pattern>/error</url-pattern>
+  </servlet-mapping>
+
+  <error-page>
+    <error-code>404</error-code>
+    <location>/error</location>
+  </error-page>
+  <error-page>
+    <error-code>500</error-code>
+    <location>/error</location>
+  </error-page>
+  <error-page>
+    <exception-type>java.lang.Throwable</exception-type>
+    <location>/error</location>
+  </error-page>
+
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+  </welcome-file-list>
+
+  <session-config>
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <http-only>true</http-only>
+    </cookie-config>
+    <tracking-mode>COOKIE</tracking-mode>
+  </session-config>
+</web-app>

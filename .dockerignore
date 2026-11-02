@@ -1,0 +1,22 @@
+# Keep the build context small and never copy secrets or build output into an image.
+.git
+.github
+.idea
+.vscode
+.settings
+.classpath
+.project
+.factorypath
+**/target
+**/node_modules
+**/__pycache__
+uploads
+*.log
+*.war
+.env
+.env.local
+.env.*.local
+docs
+README.md
+docker-compose.yml
+render.yaml

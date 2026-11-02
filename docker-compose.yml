@@ -1,0 +1,67 @@
+# Local "everything in containers" option for machines that have Docker.
+#
+# The primary local workflow is still Eclipse + Tomcat + local MySQL (Docker is not installed on
+# the author's PC). This file exists for reviewers and CI-like smoke tests.
+#
+#   copy .env.example .env      (then fill in the values)
+#   docker compose up --build
+#   open http://localhost:8080
+#
+# Secrets are read from .env, which is git-ignored - never hard-coded here.
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: resumatch-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: resumatch
+      MYSQL_USER: ${DB_USER:-resumatch_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resumatch-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/resumatch?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8
+      DB_USER: ${DB_USER:-resumatch_app}
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      # Development storage on a volume; production uses the database (Phase 3).
+      FILE_STORAGE: disk
+      FILE_STORAGE_DIR: /data/uploads
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-smtp}
+      MAIL_FROM: ${MAIL_FROM:-support.resumatch@gmail.com}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-support.resumatch@gmail.com}
+      APP_ENV: local-docker
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads:/data/uploads
+
+volumes:
+  mysql-data:
+  uploads:

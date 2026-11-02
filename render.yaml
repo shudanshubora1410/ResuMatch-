@@ -1,0 +1,54 @@
+# Render blueprint for the ResuMatch backend.
+#
+# Render builds the repo's Dockerfile and runs the Tomcat container. Values that are secrets are
+# marked "sync: false": Render asks for them in the dashboard and stores them, and they never
+# appear in this file or in the image.
+#
+# After the first deploy, copy the service URL into frontend/vercel.json (the /api/* rewrite).
+
+services:
+  - type: web
+    name: resumatch-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SUPPORT_EMAIL
+        value: support.resumatch@gmail.com
+      # Production stores uploads in MySQL because Render's free disk is wiped on deploy.
+      - key: FILE_STORAGE
+        value: db
+      # Render's free plan blocks outbound SMTP ports, so mail goes over the Brevo HTTPS API.
+      - key: MAIL_PROVIDER
+        value: brevo
+      - key: DB_POOL_MAX
+        value: "5"
+      # ---- Secrets: set these in the Render dashboard ----
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
