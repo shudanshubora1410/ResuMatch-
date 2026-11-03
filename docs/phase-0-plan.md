@@ -199,3 +199,19 @@ Rule: an applied migration is never edited. Corrections always arrive as a new f
 5. Open the Vercel URL: the landing page should show the live status card reading `UP`, which
    proves Vercel -> Render -> Aiven works end to end.
 6. If the first request is slow, that is the free tier waking up. The page retries automatically.
+
+## 8. Landing page maintenance (decided 2026-11-03)
+
+The "Live Infrastructure & Telemetry" section is evidence, not a product feature. It exists
+because, at Phase 0, it is the only proof on the page that the backend is real. It must retire
+on a schedule, not by accident.
+
+| Stage | What the section should be |
+|---|---|
+| Phase 0 (today) | Full two-column panel: stack list + live `GET /api/v1/health` result. Keep as is. |
+| Phase 1-2 (accounts, uploads, scoring live) | Rewrite or delete the sentence "Accounts, uploads and the scoring engine are not built yet". A stale promise inverts into a false claim. Shrink the panel to one line under the stack list. |
+| Final product | Remove the section from the landing page. Keep the endpoint (`GET /api/v1/health`) for operators, and replace the section with a single footer line that live-checks it and links to a `/status` page. |
+
+**Phase 1 acceptance criterion:** the "not built yet" paragraph in the landing page is rewritten
+in the same commit that makes it untrue. Do not ship Phase 1 marketing copy that still claims
+the scoring engine is unbuilt.

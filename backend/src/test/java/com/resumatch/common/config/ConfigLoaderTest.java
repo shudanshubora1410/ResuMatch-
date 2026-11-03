@@ -111,4 +111,29 @@ class ConfigLoaderTest {
     assertFalse(config.requireAll("SMTP_HOST", "SMTP_USER"));
     assertTrue(config.requireAll("SMTP_HOST"));
   }
+
+  @Test
+  void envVariableWinsOverSystemProperty() {
+    assertEquals("/from/env/.env",
+        ConfigLoader.resolveEnvFilePath("/from/env/.env", "/from/property/.env", null));
+  }
+
+  @Test
+  void upperCaseSystemPropertyIsUsedWhenEnvIsMissing() {
+    assertEquals("/from/property/.env",
+        ConfigLoader.resolveEnvFilePath(null, "/from/property/.env", null));
+  }
+
+  @Test
+  void namedSystemPropertyIsUsedWhenOthersAreMissing() {
+    assertEquals("/from/named/.env",
+        ConfigLoader.resolveEnvFilePath(null, "  ", "/from/named/.env"));
+  }
+
+  @Test
+  void fallsBackToDotEnvInWorkingDirectory() {
+    assertEquals(".env", ConfigLoader.resolveEnvFilePath(null, null, null));
+    assertEquals(".env", ConfigLoader.resolveEnvFilePath("", " ", null));
+  }
+
 }

@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ResuMatch - know exactly why your resume matches a job</title>
-  <meta name="description" content="ResuMatch is an explainable resume screening platform: deterministic match scores you can inspect, and AI that only explains, never decides.">
+  <title>ResuMatch - every score comes with receipts</title>
+  <meta name="description" content="ResuMatch scores resumes with deterministic rules and shows the exact line that earned or lost every point. AI explains the result; it never decides it.">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/css/styles.css">
   <script type="module" src="assets/js/pages/home.js"></script>
@@ -16,120 +17,247 @@
   <header id="site-header" class="site-header"></header>
 
   <main id="main">
-    <section class="hero">
+
+    <!-- ================= HERO ================= -->
+    <section class="hero" aria-labelledby="hero-title">
       <div class="container hero__grid">
+
         <div class="hero__copy">
-          <p class="eyebrow">Explainable resume screening</p>
-          <h1>Know exactly <em>why</em> your resume matches a job.</h1>
+          <p class="eyebrow">
+            Explainable resume screening
+            <span class="eyebrow__meta">Deterministic &middot; no model in the arithmetic &middot; same inputs, same score</span>
+          </p>
+          <h1 class="display" id="hero-title">
+            Every score comes with receipts.
+          </h1>
           <p class="lede">
-            Every score comes from rule-based Java you can read and audit - skills, experience,
-            education, projects, certifications and formatting. AI explains and suggests; it never
-            decides your score.
+            Rule-based Java, not a model. Same resume and same job always produce the same number,
+            and every category prints its weight, its score and the points it moved. AI only
+            writes the explanation.
           </p>
           <div class="hero__actions">
-            <a class="btn btn--primary" href="#status">Check the API status</a>
-            <a class="btn btn--ghost" href="#how">See how scoring works</a>
+            <a class="btn btn--primary" href="#report">Test the scoring engine</a>
+            <a class="btn btn--ghost" href="#how">How scoring works</a>
           </div>
-          <ul class="chips" aria-label="Key properties">
-            <li class="chip">Deterministic scores</li>
-            <li class="chip">Full breakdown</li>
-            <li class="chip">AI explains, never decides</li>
-          </ul>
         </div>
 
-        <aside class="card status-card" id="status" aria-labelledby="status-heading">
-          <div class="status-card__head">
-            <h2 id="status-heading">Live API status</h2>
-            <button class="btn btn--small btn--ghost" type="button" id="status-refresh">Check again</button>
+        <!--
+          The receipt. This is the only place the full breakdown is printed: six categories, their
+          weights and the points each one contributed. All numbers come from the data attributes on
+          the rows, so a weight is edited in exactly one place.
+        -->
+        <aside class="report is-partial" id="report" aria-labelledby="report-title">
+          <div class="report__bar">
+            <p class="report__title" id="report-title">
+              Backend Engineer (Java) <span>sample report</span>
+            </p>
           </div>
-          <p class="status-card__hint">
-            This page calls <code>GET /api/v1/health</code> on the Java backend. On the free hosting
-            tier the first request can take up to a minute because the server is waking up.
-          </p>
-          <div id="status-output" class="status-output" role="status" aria-live="polite">
-            <p class="status-loading">Checking the backend…</p>
+
+          <div class="report__score">
+            <div class="ring" id="score-ring" style="--pct: 80"
+                 role="img" aria-label="Match score: 80 out of 100">
+              <span class="ring__value" id="score-value">80</span>
+              <span class="ring__unit">of 100</span>
+            </div>
+            <div class="report__verdict">
+              <p class="report__kicker" id="score-verdict">Partial match</p>
+              <p class="report__note" id="score-note">
+                4 of 5 must-have skills matched. Rules v1, no model in the loop.
+              </p>
+            </div>
           </div>
+
+          <table class="mini" aria-label="Points by category">
+            <thead>
+              <tr>
+                <th scope="col">Category</th>
+                <th scope="col" class="num">Weight</th>
+                <th scope="col" class="num">Score</th>
+                <th scope="col" class="num">Points</th>
+              </tr>
+            </thead>
+            <tbody id="mini-rows">
+              <tr data-key="skills" data-weight="40" data-score="80" data-score-after="100">
+                <th scope="row">Skills</th>
+                <td class="num">40%</td>
+                <td class="num">80</td>
+                <td class="num" data-points>32.0</td>
+              </tr>
+              <tr data-key="experience" data-weight="25" data-score="84">
+                <th scope="row">Experience</th>
+                <td class="num">25%</td>
+                <td class="num">84</td>
+                <td class="num" data-points>21.0</td>
+              </tr>
+              <tr data-key="education" data-weight="15" data-score="80">
+                <th scope="row">Education</th>
+                <td class="num">15%</td>
+                <td class="num">80</td>
+                <td class="num" data-points>12.0</td>
+              </tr>
+              <tr data-key="projects" data-weight="10" data-score="80">
+                <th scope="row">Projects</th>
+                <td class="num">10%</td>
+                <td class="num">80</td>
+                <td class="num" data-points>8.0</td>
+              </tr>
+              <tr data-key="certifications" data-weight="5" data-score="40">
+                <th scope="row">Certifications</th>
+                <td class="num">5%</td>
+                <td class="num">40</td>
+                <td class="num" data-points>2.0</td>
+              </tr>
+              <tr data-key="formatting" data-weight="5" data-score="100">
+                <th scope="row">Formatting</th>
+                <td class="num">5%</td>
+                <td class="num">100</td>
+                <td class="num" data-points>5.0</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">Weighted total</th>
+                <td class="num">100%</td>
+                <td class="num">-</td>
+                <td class="num" id="score-total">80.0</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="sim">
+            <label class="switch" for="sim-docker">
+              <input type="checkbox" id="sim-docker" aria-describedby="sim-docker-hint">
+              <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+              <span class="switch__label">
+                <strong>Add Docker to the resume</strong>
+                <span id="sim-docker-hint">Docker is a must-have for this job. Turn it on and watch the score move.</span>
+              </span>
+            </label>
+            <!-- Styled like engine output on purpose: this line is what the rule engine would log. -->
+            <p class="rule" id="rule-line">
+              <span class="rule__key">rule.skills.docker</span>
+              <span id="rule-text">must-have "Docker" missing from the skills section &rarr; Skills scores 80</span>
+            </p>
+          </div>
+
+          <p class="report__foot" id="report-foot">Deterministic: same inputs, same number.</p>
         </aside>
       </div>
     </section>
 
-    <section class="section" id="how">
+    <!-- ================= HOW SCORING WORKS ================= -->
+    <section class="section section--tint" id="how" aria-labelledby="how-title">
       <div class="container">
-        <h2 class="section__title">How the score is built</h2>
-        <p class="section__lede">
-          Six categories, each scored 0-100 by confidence-weighted keyword matching, then combined
-          with per-job weights. Same resume and same job always give the same number.
+        <div class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2 class="h2" id="how-title">Three steps. Nothing hidden in between.</h2>
+          <p class="lede">
+            Six categories, weighted per job, scored 0-100, then summed. Every point above is
+            produced by code you can read - and the same inputs always produce the same number.
+          </p>
+        </div>
+
+        <div class="trace" role="list" aria-label="One resume through the pipeline">
+          <div class="trace__row" role="listitem">
+            <span class="trace__step">Step 1</span>
+            <span class="trace__name">Read both documents</span>
+            <span class="trace__data">resume.pdf · DOCX · 41 KB → 6 sections, 18 keywords</span>
+          </div>
+          <div class="trace__row" role="listitem">
+            <span class="trace__step">Step 2</span>
+            <span class="trace__name">Score by fixed rules</span>
+            <span class="trace__data">40·80 + 25·84 + 15·80 + 10·80 + 5·40 + 5·100</span>
+          </div>
+          <div class="trace__row" role="listitem">
+            <span class="trace__step">Step 3</span>
+            <span class="trace__name">Show the working</span>
+            <span class="trace__data">= 80.0 · 6 rule ids, one per category</span>
+          </div>
+        </div>
+        <p class="trace__note">
+          A worked example, not a mock: those are the same six weights and six category scores the
+          report above is showing. Change one input and the arithmetic changes with it - there is
+          nothing else in the path from resume to number.
         </p>
-        <ol class="steps">
-          <li class="step">
-            <span class="step__number">1</span>
-            <h3>Extract and normalise</h3>
-            <p>PDF or DOCX text is cleaned and split into Summary, Skills, Experience, Education,
-              Projects, Certifications and Other.</p>
-          </li>
-          <li class="step">
-            <span class="step__number">2</span>
-            <h3>Match skills with confidence</h3>
-            <p>A skill found in the Skills section counts more than one mentioned in passing.
-              Synonyms such as "JS" and "JavaScript" resolve to one dictionary entry.</p>
-          </li>
-          <li class="step">
-            <span class="step__number">3</span>
-            <h3>Score six categories</h3>
-            <p>Skills, experience, education, projects, certifications and formatting each get a
-              transparent 0-100 score with the matched and missing items listed.</p>
-          </li>
-          <li class="step">
-            <span class="step__number">4</span>
-            <h3>Explain and improve</h3>
-            <p>The breakdown lists plain-English reasons and what-if simulations show the projected
-              score before you change anything.</p>
-          </li>
-        </ol>
       </div>
     </section>
 
-    <section class="section section--muted" id="features">
+    <!-- ================= WHO IT IS FOR ================= -->
+    <section class="section" id="whos-it-for" aria-labelledby="sides-title">
       <div class="container">
-        <h2 class="section__title">Built for both sides of the hiring table</h2>
-        <div class="grid grid--3">
-          <article class="card feature">
+        <div class="section-head">
+          <p class="eyebrow">For both sides</p>
+          <h2 class="h2" id="sides-title">Two views, one audit trail.</h2>
+        </div>
+
+        <div class="sides">
+          <div class="sides__col">
             <h3>Candidates</h3>
-            <p>See your match score with a full breakdown, simulate "what if I add Docker", track
-              applications and get a useful email at every stage - including a rejection that tells
-              you what to learn next.</p>
-          </article>
-          <article class="card feature">
+            <ul>
+              <li><span class="tick" aria-hidden="true"></span>Your score with the full breakdown,
+                not a thumbs up or down.</li>
+              <li><span class="tick" aria-hidden="true"></span>A simulator: add a missing must-have
+                and see the score move.</li>
+              <li><span class="tick" aria-hidden="true"></span>Rejection emails that name the gap
+                instead of thanking you.</li>
+            </ul>
+          </div>
+          <div class="sides__col">
             <h3>Recruiters</h3>
-            <p>Post jobs with MUST_HAVE, IMPORTANT and NICE_TO_HAVE skills, see applicants ranked
-              with reasons, compare them side by side and move them through a pipeline.</p>
-          </article>
-          <article class="card feature">
-            <h3>Admins</h3>
-            <p>Manage the skill dictionary and synonyms, review reported jobs, approve AI-suggested
-              skill matches and watch platform analytics and audit logs.</p>
-          </article>
+            <ul>
+              <li><span class="tick" aria-hidden="true"></span>Jobs posted with must-have, important
+                and nice-to-have skills.</li>
+              <li><span class="tick" aria-hidden="true"></span>Applicants ranked with the reason
+                behind every position.</li>
+              <li><span class="tick" aria-hidden="true"></span>Side-by-side comparison and a
+                pipeline to move people through.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h3 class="admin-card__title">Admin console</h3>
+          <p class="admin-card__copy">
+            Skill dictionary <span aria-hidden="true">&middot;</span> Synonym mapping
+            <span aria-hidden="true">&middot;</span> Flagged jobs
+            <span aria-hidden="true">&middot;</span> Audit log
+          </p>
         </div>
       </div>
     </section>
 
-    <section class="section" id="now">
-      <div class="container">
-        <div class="card callout">
-          <p class="eyebrow">Phase 0 of 16</p>
-          <h2>What is already running</h2>
-          <p>
-            This is the foundation release: the Maven WAR builds and starts on Tomcat, the database
-            connection pool and Flyway migrations run at startup, and this page talks to a real,
-            health-checked API. Accounts and the resume pipeline arrive in the next phases.
+    <!-- ================= STACK + LIVE STATUS ================= -->
+    <section class="section section--tint" id="status" aria-labelledby="status-title">
+      <div class="container stack">
+        <div class="stack__copy">
+          <p class="eyebrow">Infrastructure</p>
+          <h2 class="h2" id="status-title">Live Infrastructure &amp; Telemetry</h2>
+          <p class="stack__lede">
+            Everything below is deployed, not illustrated: this page is served by a Java 17 WAR, and
+            the panel calls a real health endpoint backed by MySQL. Accounts, uploads and the scoring
+            engine are not built yet, and nothing here pretends otherwise.
           </p>
           <ul class="checklist">
-            <li>Java 17 / Servlet 6.0 WAR, runs on Tomcat 10.1 and Tomcat 11</li>
-            <li>HikariCP pool + Flyway migrations with retry/backoff</li>
-            <li>One JSON success and error envelope, central error handler</li>
+            <li>Java 17 / Servlet 6.0 WAR, deployable on Tomcat 10.1 and 11</li>
+            <li>HikariCP connection pool and Flyway migrations at startup, with retry</li>
+            <li>One JSON success and error envelope behind a central error handler</li>
             <li>File storage and mail sender behind interfaces (disk + SMTP today)</li>
-            <li>Docker, Render blueprint, Vercel rewrites and a CI pipeline</li>
+            <li>Dockerfile, Render blueprint, Vercel rewrites and a CI pipeline</li>
           </ul>
+        </div>
+
+        <div class="panel" aria-labelledby="panel-title">
+          <div class="panel__head">
+            <h3 id="panel-title">GET /api/v1/health</h3>
+            <button class="panel__btn" type="button" id="status-refresh">Check again</button>
+          </div>
+          <div id="status-output" class="status-output" role="status" aria-live="polite">
+            <p class="status-loading"><span class="spinner"></span> Checking the backend…</p>
+          </div>
+          <p class="panel__hint">
+            Called live from your browser. On the free tier the first request can take up to a
+            minute while the server wakes up.
+          </p>
+          <p class="panel__meta" id="status-meta">no request sent yet</p>
         </div>
       </div>
     </section>

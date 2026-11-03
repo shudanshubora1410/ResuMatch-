@@ -88,12 +88,19 @@ You should see `BUILD SUCCESS` and `target\resumatch.war`.
 1. `File > Import > Maven > Existing Maven Projects`, root directory `C:\path\to\resumatch\backend`.
 2. Add Tomcat: `Window > Show View > Servers > New > Server > Tomcat v11.0 Server`,
    point it at your Tomcat folder, and add the `resumatch` module.
-3. Tell Tomcat where your `.env` is: `Run > Run Configurations > Apache Tomcat > Arguments >
-   VM arguments`:
+3. Tell Tomcat where your `.env` is. Two forms, both supported by `ConfigLoader`, so pick
+   whichever fits how you start the server:
 
    ```text
-   -DRESUMATCH_ENV_FILE=C:\path\to\resumatch\.env
+   Environment variable : RESUMATCH_ENV_FILE=C:\path\to\resumatch\.env
+   VM argument (-D)     : -DRESUMATCH_ENV_FILE=C:\path\to\resumatch\.env
+   Named -D form        : -Dresumatch.env.file=C:\path\to\resumatch\.env
    ```
+
+   In Eclipse: `Run > Run Configurations > Apache Tomcat > Arguments > VM arguments` for the
+   `-D` form, or the `Environment` tab for the variable. Without one of these, Tomcat looks for
+   `.env` in `$CATALINA_HOME\bin` and startup fails with `Required configuration value is
+   missing: DB_URL`.
 
 4. The frontend must be reachable at the context root, because the pages call `/api/v1/...`:
    `Servers` view > double-click Tomcat > `Modules` tab > select `resumatch` > `Edit...` > Path: `/`.

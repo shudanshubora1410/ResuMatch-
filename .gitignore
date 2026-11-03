@@ -34,3 +34,6 @@ Thumbs.db
 # ---- Node (only used for tooling, not for the app) ----
 node_modules/
 npm-debug.log*
+
+# Local backup of the pre-v5 UI, never shipped.
+frontend-backup/

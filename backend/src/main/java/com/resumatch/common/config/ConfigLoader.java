@@ -19,6 +19,9 @@ public final class ConfigLoader {
   /** Optional path to a .env file, e.g. C:\projects\resumatch\.env */
   public static final String ENV_FILE_OVERRIDE = "RESUMATCH_ENV_FILE";
 
+  /** Same override as a -D system property, for Eclipse run configurations and container flags. */
+  public static final String ENV_FILE_PROPERTY = "resumatch.env.file";
+
   private static final String DEFAULT_ENV_FILE = ".env";
 
   private ConfigLoader() {
@@ -33,10 +36,8 @@ public final class ConfigLoader {
   public static AppConfig load() {
     Map<String, String> fileValues = new HashMap<>();
 
-    String explicitPath = System.getenv(ENV_FILE_OVERRIDE);
-    Path envFile = (explicitPath == null || explicitPath.isBlank())
-        ? Path.of(DEFAULT_ENV_FILE)
-        : Path.of(explicitPath);
+    Path envFile = Path.of(resolveEnvFilePath(System.getenv(ENV_FILE_OVERRIDE),
+        System.getProperty(ENV_FILE_OVERRIDE), System.getProperty(ENV_FILE_PROPERTY)));
 
     if (Files.isReadable(envFile)) {
       try {
@@ -48,6 +49,23 @@ public final class ConfigLoader {
     }
 
     return fromSources(fileValues, System.getenv());
+  }
+
+  /**
+   * Picks the .env path from the three places people actually configure it, in priority order:
+   * the OS environment variable, then the -D flags. Falls back to {@code .env} in the working
+   * directory, which is what a plain "java -jar" or a CI checkout gets.
+   *
+   * <p>Why the -D support: Eclipse and Tomcat users set VM arguments, not environment variables,
+   * and silently ignoring that argument leaves the app failing with "missing DB_URL".</p>
+   */
+  public static String resolveEnvFilePath(String fromEnv, String fromProperty, String fromNamedProperty) {
+    for (String candidate : new String[] {fromEnv, fromProperty, fromNamedProperty}) {
+      if (candidate != null && !candidate.isBlank()) {
+        return candidate.trim();
+      }
+    }
+    return DEFAULT_ENV_FILE;
   }
 
   /** Merge helper, separate from I/O so it is trivial to unit test. */
